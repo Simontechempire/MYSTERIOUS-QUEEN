@@ -1,0 +1,27 @@
+{
+  "name": "mysterious-queen",
+  "version": "1.0.0",
+  "description": "Mysterious Queen - WhatsApp bot with Telegram pairing system",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "keywords": [
+    "whatsapp-bot",
+    "telegram-bot",
+    "mysterious-queen",
+    "javascript",
+    "nodejs"
+  ],
+  "author": "Simon Tech",
+  "license": "MIT",
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.16",
+    "dotenv": "^16.4.5",
+    "pino": "^9.0.0",
+    "qrcode": "^1.5.4",
+    "telegraf": "^4.16.3"
+  }
+}
