@@ -1,21 +1,30 @@
 require("dotenv").config();
 
-const bot = require("./src/telegram/bot");
-const { createWhatsAppConnection } = require("./src/whatsapp/connection");
-const { handleMessage } = require("./src/handlers/messageHandler");
+const bot = require("./telegram/bot");
+const {
+    createWhatsAppConnection
+} = require("./whatsapp/connection");
+
+const {
+    handleMessage
+} = require("./handlers/messageHandler");
+
 const {
     ensureSessionsDirectory
-} = require("./src/whatsapp/session");
+} = require("./whatsapp/session");
 
 async function startBot() {
     try {
+        console.log("");
         console.log("╭━━━━━━━━━━━━━━━━━━━━━━━━━━╮");
         console.log("     👑 MYSTERIOUS QUEEN");
         console.log("╰━━━━━━━━━━━━━━━━━━━━━━━━━━╯");
         console.log("");
 
         if (!process.env.TELEGRAM_BOT_TOKEN) {
-            throw new Error("TELEGRAM_BOT_TOKEN is missing from .env");
+            throw new Error(
+                "TELEGRAM_BOT_TOKEN is missing from .env"
+            );
         }
 
         ensureSessionsDirectory();
@@ -24,22 +33,39 @@ async function startBot() {
 
         await bot.launch();
 
-        console.log("✅ Telegram bot started");
+        console.log(
+            "✅ Telegram bot started"
+        );
 
-        console.log("📱 Starting WhatsApp connection...");
+        console.log(
+            "📱 Starting WhatsApp connection..."
+        );
 
-        const sock = await createWhatsAppConnection();
+        const sock =
+            await createWhatsAppConnection();
 
-        sock.ev.on("messages.upsert", async ({ messages }) => {
-            for (const message of messages) {
-                await handleMessage(sock, message);
+        sock.ev.on(
+            "messages.upsert",
+            async ({ messages }) => {
+                for (const message of messages) {
+                    await handleMessage(
+                        sock,
+                        message
+                    );
+                }
             }
-        });
+        );
 
-        console.log("✅ Mysterious Queen is running");
+        console.log(
+            "✅ Mysterious Queen is running"
+        );
     } catch (error) {
-        console.error("❌ Failed to start Mysterious Queen:");
+        console.error(
+            "❌ Failed to start Mysterious Queen:"
+        );
+
         console.error(error);
+
         process.exit(1);
     }
 }
