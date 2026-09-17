@@ -6,9 +6,11 @@ const {
 
 const path = require("path");
 
+let currentSocket = null;
+
 
 // ═══════════════════════════════════════
-// 📱 WHATSAPP CONNECTION
+// 📱 CREATE WHATSAPP CONNECTION
 // ═══════════════════════════════════════
 
 async function createWhatsAppConnection() {
@@ -22,9 +24,7 @@ async function createWhatsAppConnection() {
 
     const sock = makeWASocket({
         auth: state,
-
         printQRInTerminal: false,
-
         browser: [
             "Mysterious Queen",
             "Chrome",
@@ -32,28 +32,21 @@ async function createWhatsAppConnection() {
         ]
     });
 
-    // Save authentication information
-    sock.ev.on(
-        "creds.update",
-        saveCreds
-    );
+    currentSocket = sock;
 
-
-    // ═══════════════════════════════════
-    // 🔌 CONNECTION EVENTS
-    // ═══════════════════════════════════
+    sock.ev.on("creds.update", saveCreds);
 
     sock.ev.on(
         "connection.update",
         ({ connection, lastDisconnect }) => {
 
             if (connection === "open") {
-                console.log(
-                    "✅ WhatsApp connected"
-                );
+                console.log("✅ WhatsApp connected");
             }
 
             if (connection === "close") {
+
+                currentSocket = null;
 
                 const shouldReconnect =
                     lastDisconnect?.error
@@ -61,16 +54,13 @@ async function createWhatsAppConnection() {
                     DisconnectReason.loggedOut;
 
                 if (shouldReconnect) {
-
                     console.log(
                         "🔄 WhatsApp reconnecting..."
                     );
 
                     createWhatsAppConnection()
                         .catch(console.error);
-
                 } else {
-
                     console.log(
                         "❌ WhatsApp logged out"
                     );
@@ -79,40 +69,39 @@ async function createWhatsAppConnection() {
         }
     );
 
-
     return sock;
 }
 
 
 // ═══════════════════════════════════════
-// 🔐 REQUEST PAIRING CODE
+// 🔎 GET CURRENT SOCKET
 // ═══════════════════════════════════════
 
-async function requestPairingCode(
-    sock,
-    phoneNumber
-) {
+function getWhatsAppSocket() {
+    return currentSocket;
+}
+
+
+// ═══════════════════════════════════════
+// 📱 REQUEST PAIRING CODE
+// ═══════════════════════════════════════
+
+async function requestPairingCode(phoneNumber) {
+
+    const sock = getWhatsAppSocket();
 
     if (!sock) {
         throw new Error(
-            "WhatsApp connection is not available."
+            "WhatsApp connection is not ready."
         );
     }
 
-    if (!phoneNumber) {
-        throw new Error(
-            "WhatsApp phone number is required."
-        );
-    }
-
-    // Remove +, spaces, brackets and dashes
-    const number =
-        phoneNumber
-            .replace(/[^0-9]/g, "");
+    const number = String(phoneNumber)
+        .replace(/[^0-9]/g, "");
 
     if (number.length < 8) {
         throw new Error(
-            "Invalid WhatsApp phone number."
+            "Invalid WhatsApp number."
         );
     }
 
@@ -129,5 +118,6 @@ async function requestPairingCode(
 
 module.exports = {
     createWhatsAppConnection,
+    getWhatsAppSocket,
     requestPairingCode
 };
