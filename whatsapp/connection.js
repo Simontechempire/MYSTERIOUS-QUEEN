@@ -10,11 +10,10 @@ let currentSocket = null;
 
 
 // ═══════════════════════════════════════
-// 📱 CREATE NORMAL WHATSAPP CONNECTION
+// 📱 NORMAL WHATSAPP CONNECTION
 // ═══════════════════════════════════════
 
 async function createWhatsAppConnection() {
-
     const sessionPath = path.join(
         process.cwd(),
         "sessions"
@@ -46,7 +45,6 @@ async function createWhatsAppConnection() {
             }
 
             if (connection === "close") {
-
                 currentSocket = null;
 
                 const status =
@@ -70,7 +68,7 @@ async function createWhatsAppConnection() {
 
 
 // ═══════════════════════════════════════
-// 🔐 GENERATE PAIRING CODE
+// 🔐 REQUEST WHATSAPP PAIRING CODE
 // ═══════════════════════════════════════
 
 async function requestPairingCode(phoneNumber) {
@@ -85,7 +83,7 @@ async function requestPairingCode(phoneNumber) {
     }
 
     console.log(
-        `📱 Creating pairing session for ${number}`
+        `📱 Requesting pairing code for ${number}`
     );
 
     const pairingPath = path.join(
@@ -109,59 +107,17 @@ async function requestPairingCode(phoneNumber) {
 
     sock.ev.on("creds.update", saveCreds);
 
-    await new Promise((resolve, reject) => {
+    // Give the socket a moment to initialize.
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
-        let settled = false;
-
-        const timeout = setTimeout(() => {
-            if (!settled) {
-                settled = true;
-                reject(
-                    new Error(
-                        "Pairing connection timed out."
-                    )
-                );
-            }
-        }, 30000);
-
-        sock.ev.on(
-            "connection.update",
-            ({ connection, lastDisconnect }) => {
-
-                console.log(
-                    `📡 Pairing connection: ${connection || "connecting"}`
-                );
-
-                if (
-                    connection === "open" &&
-                    !settled
-                ) {
-                    settled = true;
-                    clearTimeout(timeout);
-                    resolve();
-                }
-
-                if (
-                    connection === "close" &&
-                    !settled
-                ) {
-                    settled = true;
-                    clearTimeout(timeout);
-
-                    const reason =
-                        lastDisconnect?.error?.message ||
-                        "Connection Closed";
-
-                    reject(
-                        new Error(reason)
-                    );
-                }
-            }
-        );
-    });
-
+    // IMPORTANT:
+    // Request the pairing code BEFORE waiting for "open".
     const code =
         await sock.requestPairingCode(number);
+
+    console.log(
+        `✅ Pairing code generated for ${number}`
+    );
 
     return code;
 }
